@@ -11,15 +11,10 @@ var Client = $hx_exports["Client"] = function() { };
 Client.__name__ = true;
 Client.main = function() {
 	var remote = new tink_web_proxy_Remote0(new tink_http_clients_JsClient(),tink_web_proxy__$Remote_RemoteEndpoint_$Impl_$._new(tink_url__$Host_Host_$Impl_$._new("localhost",3000)));
-	var ret = remote.json().handle(function(o) {
-		console.log("Client.hx:12:",o);
+	var ret = remote.hello().handle(function(o) {
+		console.log("Client.hx:13:",o);
 		return;
 	});
-};
-var Root = function() { };
-Root.__name__ = true;
-Root.prototype = {
-	__class__: Root
 };
 var DateTools = function() { };
 DateTools.__name__ = true;
@@ -173,18 +168,6 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 };
-var Lambda = function() { };
-Lambda.__name__ = true;
-Lambda.exists = function(it,f) {
-	var x = $getIterator(it);
-	while(x.hasNext()) {
-		var x1 = x.next();
-		if(f(x1)) {
-			return true;
-		}
-	}
-	return false;
-};
 Math.__name__ = true;
 var Reflect = function() { };
 Reflect.__name__ = true;
@@ -234,6 +217,37 @@ Reflect.copy = function(o) {
 		o2[f] = Reflect.field(o,f);
 	}
 	return o2;
+};
+var Root = function() {
+};
+Root.__name__ = true;
+Root.prototype = {
+	hello: function() {
+		return { slideshow : { title : "Look!", author : "Mr. Bean", date : "2018-08-08", slides : [{ title : "Woohoo", type : "silly", items : ["item_foo","item_bar"]}]}};
+	}
+	,__class__: Root
+};
+var Server = function() { };
+Server.__name__ = true;
+Server.main = function() {
+	var container = new tink_http_containers_NodeContainer(tink_http_containers__$NodeContainer_ServerKindBase.Port(3000));
+	var router = new tink_web_routing_Router0(new Root());
+	container.run(new tink_http_SimpleHandler(function(req) {
+		var this1 = tink_web_routing_Context.ofRequest(req);
+		var this2 = router.route(this1);
+		var f = tink_core__$Promise_Recover_$Impl_$.ofSync(tink_http__$Response_OutgoingResponse_$Impl_$.reportError);
+		var ret = this2.flatMap(function(o) {
+			switch(o._hx_index) {
+			case 0:
+				var d = o.data;
+				return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(d));
+			case 1:
+				var e = o.failure;
+				return f(e);
+			}
+		});
+		return ret.gather();
+	}));
 };
 var Std = function() { };
 Std.__name__ = true;
@@ -980,128 +994,83 @@ haxe_http_HttpBase.prototype = {
 	}
 	,__class__: haxe_http_HttpBase
 };
-var haxe_http_HttpJs = function(url) {
-	this.async = true;
-	this.withCredentials = false;
+var haxe_http_HttpNodeJs = function(url) {
 	haxe_http_HttpBase.call(this,url);
 };
-haxe_http_HttpJs.__name__ = true;
-haxe_http_HttpJs.__super__ = haxe_http_HttpBase;
-haxe_http_HttpJs.prototype = $extend(haxe_http_HttpBase.prototype,{
+haxe_http_HttpNodeJs.__name__ = true;
+haxe_http_HttpNodeJs.__super__ = haxe_http_HttpBase;
+haxe_http_HttpNodeJs.prototype = $extend(haxe_http_HttpBase.prototype,{
 	request: function(post) {
 		var _gthis = this;
 		this.responseData = null;
-		var r = this.req = js_Browser.createXMLHttpRequest();
-		var onreadystatechange = function(_) {
-			if(r.readyState != 4) {
-				return;
+		var parsedUrl = js_node_Url.parse(this.url);
+		var secure = parsedUrl.protocol == "https:";
+		var host = parsedUrl.hostname;
+		var path = parsedUrl.path;
+		var port = parsedUrl.port != null ? Std.parseInt(parsedUrl.port) : secure ? 443 : 80;
+		var h = { };
+		var _g = 0;
+		var _g1 = this.headers;
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			var arr = Reflect.field(h,i.name);
+			if(arr == null) {
+				arr = [];
+				h[i.name] = arr;
 			}
-			var s;
-			try {
-				s = r.status;
-			} catch( e ) {
-				var e1 = ((e) instanceof js__$Boot_HaxeError) ? e.val : e;
-				s = null;
-			}
-			if(s != null && typeof(window) != "undefined") {
-				var protocol = window.location.protocol.toLowerCase();
-				var rlocalProtocol = new EReg("^(?:about|app|app-storage|.+-extension|file|res|widget):$","");
-				var isLocal = rlocalProtocol.match(protocol);
-				if(isLocal) {
-					s = r.responseText != null ? 200 : 404;
-				}
-			}
-			if(s == undefined) {
-				s = null;
-			}
-			if(s != null) {
-				_gthis.onStatus(s);
-			}
-			if(s != null && s >= 200 && s < 400) {
-				_gthis.req = null;
-				_gthis.onData(_gthis.responseData = r.responseText);
-			} else if(s == null) {
-				_gthis.req = null;
-				_gthis.onError("Failed to connect or resolve host");
-			} else if(s == null) {
-				_gthis.req = null;
-				_gthis.responseData = r.responseText;
-				_gthis.onError("Http Error #" + r.status);
-			} else {
-				switch(s) {
-				case 12007:
-					_gthis.req = null;
-					_gthis.onError("Unknown host");
-					break;
-				case 12029:
-					_gthis.req = null;
-					_gthis.onError("Failed to connect to host");
-					break;
-				default:
-					_gthis.req = null;
-					_gthis.responseData = r.responseText;
-					_gthis.onError("Http Error #" + r.status);
-				}
-			}
-		};
-		if(this.async) {
-			r.onreadystatechange = onreadystatechange;
+			arr.push(i.value);
 		}
-		var uri = this.postData;
-		if(uri != null) {
+		if(this.postData != null) {
 			post = true;
-		} else {
-			var _g = 0;
-			var _g1 = this.params;
-			while(_g < _g1.length) {
-				var p = _g1[_g];
-				++_g;
-				if(uri == null) {
-					uri = "";
-				} else {
-					uri += "&";
-				}
-				var s1 = p.name;
-				var uri1 = encodeURIComponent(s1) + "=";
-				var s2 = p.value;
-				uri += uri1 + encodeURIComponent(s2);
-			}
 		}
-		try {
-			if(post) {
-				r.open("POST",this.url,this.async);
-			} else if(uri != null) {
-				var question = this.url.split("?").length <= 1;
-				r.open("GET",this.url + (question ? "?" : "&") + uri,this.async);
-				uri = null;
-			} else {
-				r.open("GET",this.url,this.async);
-			}
-		} catch( e2 ) {
-			var e3 = ((e2) instanceof js__$Boot_HaxeError) ? e2.val : e2;
-			this.req = null;
-			this.onError(e3.toString());
-			return;
-		}
-		r.withCredentials = this.withCredentials;
-		if(!Lambda.exists(this.headers,function(h) {
-			return h.name == "Content-Type";
-		}) && post && this.postData == null) {
-			r.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-		}
+		var uri = null;
 		var _g2 = 0;
-		var _g11 = this.headers;
-		while(_g2 < _g11.length) {
-			var h1 = _g11[_g2];
+		var _g3 = this.params;
+		while(_g2 < _g3.length) {
+			var p = _g3[_g2];
 			++_g2;
-			r.setRequestHeader(h1.name,h1.value);
+			if(uri == null) {
+				uri = "";
+			} else {
+				uri += "&";
+			}
+			var s = p.name;
+			var uri1 = encodeURIComponent(s) + "=";
+			var s1 = p.value;
+			uri += uri1 + encodeURIComponent(s1);
 		}
-		r.send(uri);
-		if(!this.async) {
-			onreadystatechange(null);
+		var question = path.split("?").length <= 1;
+		if(uri != null) {
+			path += (question ? "?" : "&") + uri;
 		}
+		var opts = { protocol : parsedUrl.protocol, hostname : host, port : port, method : post ? "POST" : "GET", path : path, headers : h};
+		var httpResponse = function(res) {
+			var s2 = res.statusCode;
+			if(s2 != null) {
+				_gthis.onStatus(s2);
+			}
+			var body = "";
+			res.on("data",function(d) {
+				body += d;
+			});
+			res.on("end",function(_) {
+				_gthis.responseData = body;
+				_gthis.req = null;
+				if(s2 != null && s2 >= 200 && s2 < 400) {
+					_gthis.onData(body);
+				} else {
+					_gthis.onError("Http Error #" + s2);
+				}
+			});
+		};
+		this.req = secure ? js_node_Https.request(opts,httpResponse) : js_node_Http.request(opts,httpResponse);
+		if(post) {
+			this.req.write(this.postData);
+		}
+		this.req.end();
 	}
-	,__class__: haxe_http_HttpJs
+	,__class__: haxe_http_HttpNodeJs
 });
 var haxe_io_Eof = function() {
 };
@@ -1538,17 +1507,6 @@ js_Boot.__isNativeObj = function(o) {
 js_Boot.__resolveNativeClass = function(name) {
 	return $global[name];
 };
-var js_Browser = function() { };
-js_Browser.__name__ = true;
-js_Browser.createXMLHttpRequest = function() {
-	if(typeof XMLHttpRequest != "undefined") {
-		return new XMLHttpRequest();
-	}
-	if(typeof ActiveXObject != "undefined") {
-		return new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	throw new js__$Boot_HaxeError("Unable to create XMLHttpRequest object.");
-};
 var js_lib__$ArrayBuffer_ArrayBufferCompat = function() { };
 js_lib__$ArrayBuffer_ArrayBufferCompat.__name__ = true;
 js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
@@ -1557,6 +1515,25 @@ js_lib__$ArrayBuffer_ArrayBufferCompat.sliceImpl = function(begin,end) {
 	resultArray.set(u);
 	return resultArray.buffer;
 };
+var js_node_ChildProcess = require("child_process");
+var js_node_Fs = require("fs");
+var js_node_Http = require("http");
+var js_node_Https = require("https");
+var js_node_Url = require("url");
+var js_node_buffer_Buffer = require("buffer").Buffer;
+var js_node_buffer__$Buffer_Helper = function() { };
+js_node_buffer__$Buffer_Helper.__name__ = true;
+js_node_buffer__$Buffer_Helper.bytesOfBuffer = function(b) {
+	var o = Object.create(haxe_io_Bytes.prototype);
+	o.length = b.byteLength;
+	o.b = b;
+	b.bufferValue = b;
+	b.hxBytes = o;
+	b.bytes = b;
+	return o;
+};
+var js_node_http_Server = require("http").Server;
+var js_node_stream_PassThrough = require("stream").PassThrough;
 var tink_Anon = function() { };
 tink_Anon.__name__ = true;
 tink_Anon.getExistentFields = function(o) {
@@ -1698,6 +1675,11 @@ tink__$Chunk_Chunk_$Impl_$.toString = function(this1) {
 tink__$Chunk_Chunk_$Impl_$.toBytes = function(this1) {
 	return this1.toBytes();
 };
+tink__$Chunk_Chunk_$Impl_$.toBuffer = function(this1) {
+	var b = this1.toBytes();
+	var data = b.b;
+	return js_node_buffer_Buffer.from(data.buffer,data.byteOffset,b.length);
+};
 tink__$Chunk_Chunk_$Impl_$.join = function(chunks) {
 	if(chunks == null) {
 		return tink__$Chunk_Chunk_$Impl_$.EMPTY;
@@ -1726,6 +1708,9 @@ tink__$Chunk_Chunk_$Impl_$.ofBytes = function(b) {
 };
 tink__$Chunk_Chunk_$Impl_$.ofString = function(s) {
 	return tink_chunk_ByteChunk.of(haxe_io_Bytes.ofString(s));
+};
+tink__$Chunk_Chunk_$Impl_$.ofBuffer = function(s) {
+	return new tink_chunk_nodejs_BufferChunk(s);
 };
 tink__$Chunk_Chunk_$Impl_$.ofHex = function(s) {
 	var length = s.length >> 1;
@@ -2443,6 +2428,54 @@ tink_chunk__$Seekable_Seekable_$Impl_$.ofBytes = function(b) {
 tink_chunk__$Seekable_Seekable_$Impl_$.ofString = function(s) {
 	return tink_chunk__$Seekable_Seekable_$Impl_$.ofBytes(haxe_io_Bytes.ofString(s));
 };
+var tink_chunk_nodejs_BufferChunk = function(buffer) {
+	this.buffer = buffer;
+};
+tink_chunk_nodejs_BufferChunk.__name__ = true;
+tink_chunk_nodejs_BufferChunk.__interfaces__ = [tink_chunk_ChunkObject];
+tink_chunk_nodejs_BufferChunk.prototype = {
+	getByte: function(i) {
+		return this.buffer[i];
+	}
+	,getCursor: function() {
+		return tink_chunk_ByteChunk.of(this.toBytes()).getCursor();
+	}
+	,flatten: function(into) {
+		tink_chunk_ByteChunk.of(this.toBytes()).flatten(into);
+	}
+	,getLength: function() {
+		return this.buffer.length;
+	}
+	,slice: function(from,to) {
+		if(to > this.getLength()) {
+			to = this.getLength();
+		}
+		if(from < 0) {
+			from = 0;
+		}
+		if(to <= from) {
+			return tink__$Chunk_Chunk_$Impl_$.EMPTY;
+		} else if(to == this.getLength() && from == 0) {
+			return this;
+		} else {
+			return new tink_chunk_nodejs_BufferChunk(this.buffer.slice(from,to));
+		}
+	}
+	,toString: function() {
+		return this.buffer.toString();
+	}
+	,toBytes: function() {
+		var copy = tink_chunk_nodejs_BufferChunk.alloc(this.buffer.length);
+		this.buffer.copy(copy);
+		return js_node_buffer__$Buffer_Helper.bytesOfBuffer(copy);
+	}
+	,blitTo: function(target,offset) {
+		var data = target.b;
+		this.buffer.copy(js_node_buffer_Buffer.from(data.buffer,data.byteOffset,target.length),offset);
+		return;
+	}
+	,__class__: tink_chunk_nodejs_BufferChunk
+};
 var tink_core_Annex = function(target) {
 	this.target = target;
 	this.registry = new haxe_ds_ObjectMap();
@@ -2495,7 +2528,7 @@ tink_core__$Callback_Callback_$Impl_$.fromMany = function(callbacks) {
 	};
 };
 tink_core__$Callback_Callback_$Impl_$.defer = function(f) {
-	haxe_Timer.delay(f,0);
+	process.nextTick(f);
 };
 var tink_core__$Callback_LinkObject = function() { };
 tink_core__$Callback_LinkObject.__name__ = true;
@@ -4523,16 +4556,19 @@ tink_http_Fetch.getClient = function(type,secure) {
 		var c;
 		switch(type._hx_index) {
 		case 0:
-			c = secure ? new tink_http_clients_SecureJsClient() : new tink_http_clients_JsClient();
+			c = secure ? new tink_http_clients_SecureNodeClient() : new tink_http_clients_NodeClient();
 			break;
 		case 1:
 			var c1 = type.container;
 			c = new tink_http_clients_LocalContainerClient(c1);
 			break;
 		case 2:
-			c = secure ? new tink_http_clients_StdClient() : new tink_http_clients_StdClient();
+			c = secure ? new tink_http_clients_SecureCurlClient() : new tink_http_clients_CurlClient();
 			break;
 		case 3:
+			c = secure ? new tink_http_clients_StdClient() : new tink_http_clients_StdClient();
+			break;
+		case 4:
 			var c2 = type.v;
 			c = c2;
 			break;
@@ -4541,11 +4577,12 @@ tink_http_Fetch.getClient = function(type,secure) {
 	}
 	return cache.get(type);
 };
-var tink_http_ClientType = $hxEnums["tink.http.ClientType"] = { __ename__ : true, __constructs__ : ["Default","Local","StdLib","Custom"]
+var tink_http_ClientType = $hxEnums["tink.http.ClientType"] = { __ename__ : true, __constructs__ : ["Default","Local","Curl","StdLib","Custom"]
 	,Default: {_hx_index:0,__enum__:"tink.http.ClientType",toString:$estr}
 	,Local: ($_=function(container) { return {_hx_index:1,container:container,__enum__:"tink.http.ClientType",toString:$estr}; },$_.__params__ = ["container"],$_)
-	,StdLib: {_hx_index:2,__enum__:"tink.http.ClientType",toString:$estr}
-	,Custom: ($_=function(v) { return {_hx_index:3,v:v,__enum__:"tink.http.ClientType",toString:$estr}; },$_.__params__ = ["v"],$_)
+	,Curl: {_hx_index:2,__enum__:"tink.http.ClientType",toString:$estr}
+	,StdLib: {_hx_index:3,__enum__:"tink.http.ClientType",toString:$estr}
+	,Custom: ($_=function(v) { return {_hx_index:4,v:v,__enum__:"tink.http.ClientType",toString:$estr}; },$_.__params__ = ["v"],$_)
 };
 var tink_http__$Fetch_FetchResponse_$Impl_$ = {};
 tink_http__$Fetch_FetchResponse_$Impl_$.__name__ = true;
@@ -5070,6 +5107,19 @@ tink_http_IncomingRequestHeader.parser = function() {
 		}
 	});
 };
+tink_http_IncomingRequestHeader.fromIncomingMessage = function(req) {
+	var req1 = req.method;
+	var tmp = tink__$Url_Url_$Impl_$.fromString(req.url);
+	var tmp1 = "HTTP/" + req.httpVersion;
+	var _g = [];
+	var _g1 = 0;
+	var _g2 = req.rawHeaders.length / 2 | 0;
+	while(_g1 < _g2) {
+		var i = _g1++;
+		_g.push(new tink_http_HeaderField(tink_http__$Header_HeaderName_$Impl_$.ofString(req.rawHeaders[2 * i]),req.rawHeaders[2 * i + 1]));
+	}
+	return new tink_http_IncomingRequestHeader(req1,tmp,tmp1,_g);
+};
 tink_http_IncomingRequestHeader.__super__ = tink_http_RequestHeader;
 tink_http_IncomingRequestHeader.prototype = $extend(tink_http_RequestHeader.prototype,{
 	getCookies: function() {
@@ -5358,8 +5408,74 @@ tink_http__$StructuredBody_UploadedFile_$Impl_$.ofBlob = function(name,type,data
 		return new tink_streams_Single(new tink_core__$Lazy_LazyConst(tink_chunk_ByteChunk.of(data)));
 	}, saveTo : function(path) {
 		var name1 = "File sink " + path;
-		throw new js__$Boot_HaxeError("not implemented");
+		var dest = tink_io_nodejs_NodejsSink.wrap(name1,js_node_Fs.createWriteStream(path));
+		var ret = tink_io__$Source_Source_$Impl_$.pipeTo(new tink_streams_Single(new tink_core__$Lazy_LazyConst(tink_chunk_ByteChunk.of(data))),dest,{ end : true}).map(function(r) {
+			switch(r._hx_index) {
+			case 0:
+				return tink_core_Outcome.Success(tink_core_Noise.Noise);
+			case 1:
+				var _g3 = r.rest;
+				var _g2 = r.result;
+				return tink_core_Outcome.Failure(new tink_core_TypedError(null,"File $path closed unexpectedly",{ fileName : "tink/http/StructuredBody.hx", lineNumber : 37, className : "tink.http._StructuredBody.UploadedFile_Impl_", methodName : "ofBlob"}));
+			case 2:
+				var _g1 = r.rest;
+				var e = r.e;
+				return tink_core_Outcome.Failure(e);
+			}
+		});
+		return ret.gather();
 	}};
+};
+var tink_http_clients_CurlClient = function(curl) {
+	this.protocol = "http";
+	if(curl != null) {
+		this.curl = curl;
+	}
+};
+tink_http_clients_CurlClient.__name__ = true;
+tink_http_clients_CurlClient.__interfaces__ = [tink_http_ClientObject];
+tink_http_clients_CurlClient.prototype = {
+	request: function(req) {
+		var args = [];
+		args.push("-is");
+		args.push("-X");
+		args.push(req.header.method);
+		switch(req.header.protocol) {
+		case "HTTP/1.0":
+			args.push("--http1.0");
+			break;
+		case "HTTP/1.1":
+			args.push("--http1.1");
+			break;
+		case "HTTP/2":
+			args.push("--http2");
+			break;
+		default:
+		}
+		var header = HxOverrides.iter(req.header.fields);
+		while(header.hasNext()) {
+			var header1 = header.next();
+			args.push("-H");
+			args.push("" + header1.name + ": " + header1.value);
+		}
+		args.push(tink__$Url_Url_$Impl_$.toString(req.header.url));
+		return tink_core__$Promise_Promise_$Impl_$.next(tink_io_RealSourceTools.parse(this.curl(args,req.body),tink_http_ResponseHeaderBase.parser()),function(p) {
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(new tink_http_IncomingResponse(p.a,p.b))));
+		});
+	}
+	,curl: function(args,body) {
+		args.push("--data-binary");
+		args.push("@-");
+		var $process = js_node_ChildProcess.spawn("curl",args);
+		var sink = tink_io_nodejs_NodejsSink.wrap("stdin",$process.stdin);
+		tink_io__$Source_Source_$Impl_$.pipeTo(body,sink,{ end : true}).eager();
+		var options = null;
+		if(options == null) {
+			options = { };
+		}
+		return tink_io_nodejs_NodejsSource.wrap("stdout",$process.stdout,options.chunkSize,options.onEnd);
+	}
+	,__class__: tink_http_clients_CurlClient
 };
 var tink_http_clients_JsClient = function(credentials) {
 	this.credentials = false;
@@ -5468,17 +5584,108 @@ tink_http_clients_LocalContainerClient.prototype = {
 	}
 	,__class__: tink_http_clients_LocalContainerClient
 };
-var tink_http_clients_SecureJsClient = function() {
-	tink_http_clients_JsClient.call(this);
-	this.secure = true;
+var tink_http_clients_NodeClient = function() {
 };
-tink_http_clients_SecureJsClient.__name__ = true;
-tink_http_clients_SecureJsClient.__super__ = tink_http_clients_JsClient;
-tink_http_clients_SecureJsClient.prototype = $extend(tink_http_clients_JsClient.prototype,{
+tink_http_clients_NodeClient.__name__ = true;
+tink_http_clients_NodeClient.__interfaces__ = [tink_http_ClientObject];
+tink_http_clients_NodeClient.prototype = {
 	request: function(req) {
-		return this.jsRequest(req);
+		var req1 = req.header.method;
+		var this1 = req.header.url;
+		var options = this1.query == null ? this1.path : this1.path + "?" + this1.query;
+		var options1 = tink_url__$Host_Host_$Impl_$.get_name(req.header.url.host);
+		var options2 = tink_url__$Host_Host_$Impl_$.get_port(req.header.url.host);
+		var this2 = { };
+		var map = this2;
+		var h = HxOverrides.iter(req.header.fields);
+		while(h.hasNext()) {
+			var h1 = h.next();
+			map[h1.name] = h1.value;
+		}
+		var options3 = { method : req1, path : options, host : options1, port : options2, headers : map, agent : false};
+		return this.nodeRequest(js_node_Http,options3,req);
 	}
-	,__class__: tink_http_clients_SecureJsClient
+	,nodeRequest: function(agent,options,req) {
+		return tink_core__$Future_Future_$Impl_$.async(function(cb) {
+			var fwd = agent.request(options,function(msg) {
+				var statusCode = msg.statusCode;
+				var reason = msg.statusMessage;
+				var _g = [];
+				var _g1 = 0;
+				var _g2 = msg.rawHeaders.length >> 1;
+				while(_g1 < _g2) {
+					var i = _g1++;
+					_g.push(new tink_http_HeaderField(tink_http__$Header_HeaderName_$Impl_$.ofString(msg.rawHeaders[2 * i]),msg.rawHeaders[2 * i + 1]));
+				}
+				var this1 = new tink_http_ResponseHeaderBase(statusCode,reason,_g,"HTTP/1.1");
+				var name = "Response from " + tink__$Url_Url_$Impl_$.toString(req.header.url);
+				var options1 = null;
+				if(options1 == null) {
+					options1 = { };
+				}
+				var fwd1 = tink_core_Outcome.Success(new tink_http_IncomingResponse(this1,tink_io_nodejs_NodejsSource.wrap(name,msg,options1.chunkSize,options1.onEnd)));
+				cb(fwd1);
+			});
+			var fail = function(e) {
+				cb(tink_core_Outcome.Failure(e));
+			};
+			fwd.on("error",function(e1) {
+				var tmp = tink_core_TypedError.withData(null,e1.message,e1,{ fileName : "tink/http/clients/NodeClient.hx", lineNumber : 58, className : "tink.http.clients.NodeClient", methodName : "nodeRequest"});
+				fail(tmp);
+			});
+			tink_io__$Source_Source_$Impl_$.pipeTo(req.body,tink_io_nodejs_NodejsSink.wrap("Request to " + tink__$Url_Url_$Impl_$.toString(req.header.url),fwd)).handle(function(res) {
+				fwd.end();
+				switch(res._hx_index) {
+				case 0:
+					break;
+				case 1:
+					var _g3 = res.rest;
+					var _g21 = res.result;
+					fail(new tink_core_TypedError(502,"Gateway Error",{ fileName : "tink/http/clients/NodeClient.hx", lineNumber : 67, className : "tink.http.clients.NodeClient", methodName : "nodeRequest"}));
+					break;
+				case 2:
+					var _g11 = res.rest;
+					var e2 = res.e;
+					fail(e2);
+					break;
+				}
+			});
+		});
+	}
+	,__class__: tink_http_clients_NodeClient
+};
+var tink_http_clients_SecureCurlClient = function(curl) {
+	tink_http_clients_CurlClient.call(this,curl);
+	this.protocol = "https";
+};
+tink_http_clients_SecureCurlClient.__name__ = true;
+tink_http_clients_SecureCurlClient.__super__ = tink_http_clients_CurlClient;
+tink_http_clients_SecureCurlClient.prototype = $extend(tink_http_clients_CurlClient.prototype,{
+	__class__: tink_http_clients_SecureCurlClient
+});
+var tink_http_clients_SecureNodeClient = function() {
+	tink_http_clients_NodeClient.call(this);
+};
+tink_http_clients_SecureNodeClient.__name__ = true;
+tink_http_clients_SecureNodeClient.__super__ = tink_http_clients_NodeClient;
+tink_http_clients_SecureNodeClient.prototype = $extend(tink_http_clients_NodeClient.prototype,{
+	request: function(req) {
+		var req1 = req.header.method;
+		var this1 = req.header.url;
+		var options = this1.query == null ? this1.path : this1.path + "?" + this1.query;
+		var options1 = tink_url__$Host_Host_$Impl_$.get_name(req.header.url.host);
+		var options2 = tink_url__$Host_Host_$Impl_$.get_port(req.header.url.host);
+		var this2 = { };
+		var map = this2;
+		var h = HxOverrides.iter(req.header.fields);
+		while(h.hasNext()) {
+			var h1 = h.next();
+			map[h1.name] = h1.value;
+		}
+		var options3 = { method : req1, path : options, host : options1, port : options2, headers : map, agent : false};
+		return this.nodeRequest(js_node_Https,options3,req);
+	}
+	,__class__: tink_http_clients_SecureNodeClient
 });
 var tink_http_clients_StdClient = function(worker) {
 	this.worker = tink_io__$Worker_Worker_$Impl_$.ensure(worker);
@@ -5489,7 +5696,7 @@ tink_http_clients_StdClient.prototype = {
 	request: function(req) {
 		var _gthis = this;
 		return tink_core__$Future_Future_$Impl_$.async(function(cb) {
-			var r = new haxe_http_HttpJs(tink__$Url_Url_$Impl_$.toString(req.header.url));
+			var r = new haxe_http_HttpNodeJs(tink__$Url_Url_$Impl_$.toString(req.header.url));
 			var send = function(post) {
 				var code = 200;
 				r.onStatus = function(c) {
@@ -5563,6 +5770,149 @@ tink_http_containers_LocalContainer.prototype = {
 		return this.handler.process(req);
 	}
 	,__class__: tink_http_containers_LocalContainer
+};
+var tink_http_containers_NodeContainer = function(kind) {
+	this.kind = kind;
+};
+tink_http_containers_NodeContainer.__name__ = true;
+tink_http_containers_NodeContainer.__interfaces__ = [tink_http_Container];
+tink_http_containers_NodeContainer.toNodeHandler = function(handler) {
+	return function(req,res) {
+		var req1 = req.socket.remoteAddress;
+		var tmp = tink_http_IncomingRequestHeader.fromIncomingMessage(req);
+		var options = null;
+		if(options == null) {
+			options = { };
+		}
+		var tmp1 = tink_http_IncomingRequestBody.Plain(tink_io_nodejs_NodejsSource.wrap("Incoming HTTP message from " + req.socket.remoteAddress,req,options.chunkSize,options.onEnd));
+		handler.process(new tink_http_IncomingRequest(req1,tmp,tmp1)).handle(function(out) {
+			var out1 = out.header.statusCode;
+			var out2 = out.header.reason;
+			var _g = [];
+			var h = HxOverrides.iter(out.header.fields);
+			while(h.hasNext()) {
+				var h1 = h.next();
+				_g.push([h1.name,h1.value]);
+			}
+			res.writeHead(out1,out2,_g);
+			tink_io__$Source_Source_$Impl_$.pipeTo(out.body,tink_io_nodejs_NodejsSink.wrap("Outgoing HTTP response to " + req.socket.remoteAddress,res)).handle(function(x) {
+				res.end();
+			});
+		});
+	};
+};
+tink_http_containers_NodeContainer.toUpgradeHandler = function(handler) {
+	return function(req,socket,head) {
+		var req1 = req.socket.remoteAddress;
+		var tmp = tink_http_IncomingRequestHeader.fromIncomingMessage(req);
+		var options = null;
+		if(options == null) {
+			options = { };
+		}
+		var tmp1 = tink_http_IncomingRequestBody.Plain(tink_io_nodejs_NodejsSource.wrap("Incoming HTTP message from " + req.socket.remoteAddress,socket,options.chunkSize,options.onEnd));
+		handler.process(new tink_http_IncomingRequest(req1,tmp,tmp1)).handle(function(out) {
+			tink_io__$Source_Source_$Impl_$.pipeTo(out.body.prepend(new tink_streams_Single(new tink_core__$Lazy_LazyConst(tink_chunk_ByteChunk.of(haxe_io_Bytes.ofString(out.header.toString()))))),tink_io_nodejs_NodejsSink.wrap("Outgoing HTTP response to " + req.socket.remoteAddress,socket)).handle(function(_) {
+				socket.end();
+			});
+		});
+	};
+};
+tink_http_containers_NodeContainer.prototype = {
+	run: function(handler) {
+		var _gthis = this;
+		return tink_core__$Future_Future_$Impl_$.async(function(cb) {
+			var failures = tink_core__$Signal_Signal_$Impl_$.trigger();
+			var server;
+			var _g = _gthis.kind;
+			switch(_g._hx_index) {
+			case 0:
+				var server1 = _g.server;
+				server = server1;
+				break;
+			case 1:
+				var port = _g.port;
+				var server2 = new js_node_http_Server();
+				server2.listen(port);
+				server = server2;
+				break;
+			case 2:
+				var host = _g.host;
+				var server3 = new js_node_http_Server();
+				server3.listen(tink_url__$Host_Host_$Impl_$.get_port(host),tink_url__$Host_Host_$Impl_$.get_name(host));
+				server = server3;
+				break;
+			case 3:
+				var path = _g.path;
+				var server4 = new js_node_http_Server();
+				server4.listen(path);
+				server = server4;
+				break;
+			case 4:
+				var fd = _g.fd;
+				var server5 = new js_node_http_Server();
+				server5.listen(fd);
+				server = server5;
+				break;
+			}
+			var tinkify = function(e) {
+				return tink_core_TypedError.withData(null,e.message,e,{ fileName : "tink/http/containers/NodeContainer.hx", lineNumber : 80, className : "tink.http.containers.NodeContainer", methodName : "run"});
+			};
+			server.on("error",function(e1) {
+				cb(tink_http_ContainerResult.Failed(e1));
+			});
+			var tmp = tink_http_containers_NodeContainer.toUpgradeHandler(handler);
+			server.on("upgrade",tmp);
+			var onListen = function() {
+				var onListen1 = tink_http_ContainerResult.Running({ shutdown : function(hard) {
+					if(hard) {
+						console.log("tink/http/containers/NodeContainer.hx:92:","Warning: hard shutdown not implemented");
+					}
+					var ret = tink_core__$Future_Future_$Impl_$.async(function(cb1) {
+						server.close(function() {
+							cb1(true);
+						});
+					}).map(tink_core_Outcome.Success);
+					return ret.gather();
+				}, failures : failures});
+				cb(onListen1);
+			};
+			if(server.listening) {
+				onListen();
+			} else {
+				server.on("listening",onListen);
+			}
+			var tmp1 = tink_http_containers_NodeContainer.toNodeHandler(handler);
+			server.on("request",tmp1);
+			server.on("error",function(e2) {
+				cb(tink_http_ContainerResult.Failed(e2));
+			});
+		});
+	}
+	,__class__: tink_http_containers_NodeContainer
+};
+var tink_http_containers__$NodeContainer_ServerKindBase = $hxEnums["tink.http.containers._NodeContainer.ServerKindBase"] = { __ename__ : true, __constructs__ : ["Instance","Port","Host","Path","Fd"]
+	,Instance: ($_=function(server) { return {_hx_index:0,server:server,__enum__:"tink.http.containers._NodeContainer.ServerKindBase",toString:$estr}; },$_.__params__ = ["server"],$_)
+	,Port: ($_=function(port) { return {_hx_index:1,port:port,__enum__:"tink.http.containers._NodeContainer.ServerKindBase",toString:$estr}; },$_.__params__ = ["port"],$_)
+	,Host: ($_=function(host) { return {_hx_index:2,host:host,__enum__:"tink.http.containers._NodeContainer.ServerKindBase",toString:$estr}; },$_.__params__ = ["host"],$_)
+	,Path: ($_=function(path) { return {_hx_index:3,path:path,__enum__:"tink.http.containers._NodeContainer.ServerKindBase",toString:$estr}; },$_.__params__ = ["path"],$_)
+	,Fd: ($_=function(fd) { return {_hx_index:4,fd:fd,__enum__:"tink.http.containers._NodeContainer.ServerKindBase",toString:$estr}; },$_.__params__ = ["fd"],$_)
+};
+var tink_http_containers__$NodeContainer_ServerKind_$Impl_$ = {};
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.__name__ = true;
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.fromInstance = function(server) {
+	return tink_http_containers__$NodeContainer_ServerKindBase.Instance(server);
+};
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.fromPort = function(port) {
+	return tink_http_containers__$NodeContainer_ServerKindBase.Port(port);
+};
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.fromHost = function(host) {
+	return tink_http_containers__$NodeContainer_ServerKindBase.Host(host);
+};
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.fromPath = function(path) {
+	return tink_http_containers__$NodeContainer_ServerKindBase.Path(path);
+};
+tink_http_containers__$NodeContainer_ServerKind_$Impl_$.fromFd = function(fd) {
+	return tink_http_containers__$NodeContainer_ServerKindBase.Fd(fd);
 };
 var tink_io__$PipeOptions_PipeOptions_$Impl_$ = {};
 tink_io__$PipeOptions_PipeOptions_$Impl_$.__name__ = true;
@@ -5711,6 +6061,9 @@ tink_io__$Sink_SinkYielding_$Impl_$.ofPromised = function(p) {
 		}
 	});
 	return new tink_io__$Sink_FutureSink(ret.gather());
+};
+tink_io__$Sink_SinkYielding_$Impl_$.ofNodeStream = function(name,r) {
+	return tink_io_nodejs_NodejsSink.wrap(name,r);
 };
 tink_io__$Sink_SinkYielding_$Impl_$.ofOutput = function(name,target,options) {
 	var tmp;
@@ -5898,6 +6251,47 @@ tink_io__$Source_Source_$Impl_$.dirty = function(this1) {
 };
 tink_io__$Source_Source_$Impl_$.get_depleted = function(this1) {
 	return this1.get_depleted();
+};
+tink_io__$Source_Source_$Impl_$.ofNodeStream = function(name,r,options) {
+	if(options == null) {
+		options = { };
+	}
+	return tink_io_nodejs_NodejsSource.wrap(name,r,options.chunkSize,options.onEnd);
+};
+tink_io__$Source_Source_$Impl_$.toNodeStream = function(this1) {
+	var native = new js_node_stream_PassThrough();
+	var source = tink_io__$Source_Source_$Impl_$.chunked(this1);
+	var write = null;
+	write = function() {
+		source.forEach(tink_streams__$Stream_Handler_$Impl_$.ofSafe(function(chunk) {
+			var b = chunk.toBytes();
+			var data = b.b;
+			var ok = js_node_buffer_Buffer.from(data.buffer,data.byteOffset,b.length);
+			var ok1 = native.write(ok);
+			if(ok1) {
+				return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_streams_Handled.Resume));
+			} else {
+				return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_streams_Handled.Finish));
+			}
+		})).handle(function(o) {
+			switch(o._hx_index) {
+			case 0:
+				var rest = o.rest;
+				source = rest;
+				native.once("drain",write);
+				break;
+			case 2:
+				var e = o.error;
+				native.emit("error",new Error(e.message));
+				break;
+			case 3:
+				native.end();
+				break;
+			}
+		});
+	};
+	write();
+	return native;
 };
 tink_io__$Source_Source_$Impl_$.ofJsFile = function(name,file,options) {
 	var chunkSize = options == null || options.chunkSize == null ? 4096 : options.chunkSize;
@@ -6407,6 +6801,186 @@ tink_io_js_BlobSource.__super__ = tink_streams_Generator;
 tink_io_js_BlobSource.prototype = $extend(tink_streams_Generator.prototype,{
 	__class__: tink_io_js_BlobSource
 });
+var tink_io_nodejs_NodejsSink = function(target) {
+	this.target = target;
+};
+tink_io_nodejs_NodejsSink.__name__ = true;
+tink_io_nodejs_NodejsSink.wrap = function(name,native) {
+	return new tink_io_nodejs_NodejsSink(new tink_io_nodejs_WrappedWritable(name,native));
+};
+tink_io_nodejs_NodejsSink.__super__ = tink_io_SinkBase;
+tink_io_nodejs_NodejsSink.prototype = $extend(tink_io_SinkBase.prototype,{
+	consume: function(source,options) {
+		var _gthis = this;
+		var ret = source.forEach(tink_streams__$Stream_Handler_$Impl_$.ofUnknown(function(c) {
+			var ret1 = _gthis.target.write(c).map(function(w) {
+				switch(w._hx_index) {
+				case 0:
+					switch(w.data) {
+					case false:
+						return tink_streams_Handled.BackOff;
+					case true:
+						return tink_streams_Handled.Resume;
+					}
+					break;
+				case 1:
+					var e = w.failure;
+					return tink_streams_Handled.Clog(e);
+				}
+			});
+			return ret1.gather();
+		}));
+		if(options != null && options.end) {
+			ret.handle(function(end) {
+				_gthis.target.end();
+			});
+		}
+		var ret2 = ret.map(function(c1) {
+			return tink_io_PipeResultTools.toResult(c1,tink_core_Noise.Noise);
+		});
+		return ret2.gather();
+	}
+	,__class__: tink_io_nodejs_NodejsSink
+});
+var tink_io_nodejs_NodejsSource = function(target) {
+	tink_streams_Generator.call(this,tink_core__$Future_Future_$Impl_$.async(function(cb) {
+		target.read().handle(function(o) {
+			var tmp;
+			switch(o._hx_index) {
+			case 0:
+				var _g = o.data;
+				if(_g == null) {
+					tmp = tink_streams_Step.End;
+				} else {
+					var chunk = _g;
+					tmp = tink_streams_Step.Link(chunk,new tink_io_nodejs_NodejsSource(target));
+				}
+				break;
+			case 1:
+				var e = o.failure;
+				tmp = tink_streams_Step.Fail(e);
+				break;
+			}
+			cb(tmp);
+		});
+	},true));
+};
+tink_io_nodejs_NodejsSource.__name__ = true;
+tink_io_nodejs_NodejsSource.wrap = function(name,native,chunkSize,onEnd) {
+	return new tink_io_nodejs_NodejsSource(new tink_io_nodejs_WrappedReadable(name,native,chunkSize,onEnd));
+};
+tink_io_nodejs_NodejsSource.__super__ = tink_streams_Generator;
+tink_io_nodejs_NodejsSource.prototype = $extend(tink_streams_Generator.prototype,{
+	__class__: tink_io_nodejs_NodejsSource
+});
+var tink_io_nodejs_WrappedReadable = function(name,native,chunkSize,onEnd) {
+	this.name = name;
+	this.native = native;
+	this.chunkSize = chunkSize;
+	this.end = tink_core__$Future_Future_$Impl_$.async(function(cb) {
+		native.once("end",function() {
+			cb(tink_core_Outcome.Success(null));
+		});
+		native.once("error",function(e) {
+			var tmp = tink_core_Outcome.Failure(new tink_core_TypedError(null,"" + e.code + " - Failed reading from " + name + " because " + e.message,{ fileName : "tink/io/nodejs/WrappedReadable.hx", lineNumber : 22, className : "tink.io.nodejs.WrappedReadable", methodName : "new"}));
+			cb(tmp);
+		});
+	});
+	if(onEnd != null) {
+		this.end.handle(tink_core__$Callback_Callback_$Impl_$.fromNiladic(function() {
+			process.nextTick(onEnd);
+		}));
+	}
+};
+tink_io_nodejs_WrappedReadable.__name__ = true;
+tink_io_nodejs_WrappedReadable.prototype = {
+	read: function() {
+		var _gthis = this;
+		return tink_core__$Future_Future_$Impl_$.first(tink_core__$Future_Future_$Impl_$.async(function(cb) {
+			var attempt = null;
+			attempt = function() {
+				try {
+					var _g = _gthis.native.read(_gthis.chunkSize);
+					if(_g == null) {
+						_gthis.native.once("readable",attempt);
+					} else {
+						var chunk = _g;
+						var buf = typeof(chunk) == "string" ? new js_node_buffer_Buffer(chunk) : chunk;
+						var attempt1 = tink_core_Outcome.Success(new tink_chunk_nodejs_BufferChunk(buf));
+						cb(attempt1);
+					}
+				} catch( e ) {
+					var attempt2 = tink_core_Outcome.Failure(tink_core_TypedError.withData(null,"Error while reading from " + _gthis.name,((e) instanceof js__$Boot_HaxeError) ? e.val : e,{ fileName : "tink/io/nodejs/WrappedReadable.hx", lineNumber : 47, className : "tink.io.nodejs.WrappedReadable", methodName : "read"}));
+					cb(attempt2);
+				}
+			};
+			attempt();
+		}),this.end);
+	}
+	,__class__: tink_io_nodejs_WrappedReadable
+};
+var tink_io_nodejs_WrappedWritable = function(name,native) {
+	this.name = name;
+	this.native = native;
+	this.ended = tink_core__$Future_Future_$Impl_$.async(function(cb) {
+		native.once("end",function() {
+			cb(tink_core_Outcome.Success(false));
+		});
+		native.once("finish",function() {
+			cb(tink_core_Outcome.Success(false));
+		});
+		native.once("close",function() {
+			cb(tink_core_Outcome.Success(false));
+		});
+		native.on("error",function(e) {
+			var tmp = tink_core_Outcome.Failure(new tink_core_TypedError(null,"" + e.code + ": " + e.message,{ fileName : "tink/io/nodejs/WrappedWritable.hx", lineNumber : 22, className : "tink.io.nodejs.WrappedWritable", methodName : "new"}));
+			cb(tmp);
+		});
+	});
+};
+tink_io_nodejs_WrappedWritable.__name__ = true;
+tink_io_nodejs_WrappedWritable.prototype = {
+	end: function() {
+		var didEnd = false;
+		var this1 = this.ended.handle(tink_core__$Callback_Callback_$Impl_$.fromNiladic(function() {
+			didEnd = true;
+		}));
+		if(this1 != null) {
+			this1.cancel();
+		}
+		if(didEnd) {
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(false)));
+		}
+		this.native.end();
+		return tink_core__$Promise_Promise_$Impl_$.next(this.ended,function(_) {
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(true)));
+		});
+	}
+	,write: function(chunk) {
+		var _gthis = this;
+		return tink_core__$Future_Future_$Impl_$.first(tink_core__$Future_Future_$Impl_$.async(function(cb) {
+			if(chunk.getLength() == 0) {
+				cb(tink_core_Outcome.Success(true));
+				return;
+			}
+			var buf;
+			if(js_node_buffer_Buffer.isBuffer(chunk.buffer)) {
+				buf = chunk.buffer;
+			} else {
+				var b = chunk.toBytes();
+				var data = b.b;
+				buf = js_node_buffer_Buffer.from(data.buffer,data.byteOffset,b.length);
+			}
+			var f = cb;
+			var a1 = tink_core_Outcome.Success(true);
+			var tmp = function() {
+				f(a1);
+			};
+			_gthis.native.write(buf,tmp);
+		}),this.ended);
+	}
+	,__class__: tink_io_nodejs_WrappedWritable
+};
 var tink_io_std_InputSource = function(name,target,worker,buf,offset) {
 	var next = function(buf1,offset1) {
 		return new tink_io_std_InputSource(name,target,worker,buf1,offset1);
@@ -6552,6 +7126,11 @@ tink_io_std_OutputSink.prototype = $extend(tink_io_SinkBase.prototype,{
 	}
 	,__class__: tink_io_std_OutputSink
 });
+var tink_json__$Char_Char_$Impl_$ = {};
+tink_json__$Char_Char_$Impl_$.__name__ = true;
+tink_json__$Char_Char_$Impl_$.toString = function(this1) {
+	return String.fromCodePoint(this1);
+};
 var tink_json_Parser = function() { };
 tink_json_Parser.__name__ = true;
 var tink_json__$Parser_SliceData = function(source,min,max) {
@@ -6597,7 +7176,7 @@ tink_json__$Parser_JsonString_$Impl_$.toFloat = function(this1) {
 };
 tink_json__$Parser_JsonString_$Impl_$.equalsString = function(a,b) {
 	if(b.length == a.max - a.min) {
-		return a.source.substring(a.min,a.max) == b;
+		return a.source.startsWith(b,a.min);
 	} else {
 		return false;
 	}
@@ -7163,7 +7742,7 @@ tink_json_Parser0.prototype = $extend(tink_json_BasicParser.prototype,{
 				if(!tmp2) {
 					this.die("Expected :");
 				}
-				if("slideshow".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "slideshow") {
+				if("slideshow".length == __name__.max - __name__.min && __name__.source.startsWith("slideshow",__name__.min)) {
 					v_slideshow = this.parse1();
 					hasv_slideshow = true;
 				} else {
@@ -7247,10 +7826,10 @@ tink_json_Parser0.prototype = $extend(tink_json_BasicParser.prototype,{
 				if(!tmp2) {
 					this.die("Expected :");
 				}
-				if("title".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "title") {
+				if("title".length == __name__.max - __name__.min && __name__.source.startsWith("title",__name__.min)) {
 					v_title = tink_json__$Parser_JsonString_$Impl_$.toString(this.parseString());
 					hasv_title = true;
-				} else if("slides".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "slides") {
+				} else if("slides".length == __name__.max - __name__.min && __name__.source.startsWith("slides",__name__.min)) {
 					while(this.pos < this.max && this.source.charCodeAt(this.pos) < 33) this.pos++;
 					var v_slides1;
 					if(this.max > this.pos && this.source.charCodeAt(this.pos) == 91) {
@@ -7304,10 +7883,10 @@ tink_json_Parser0.prototype = $extend(tink_json_BasicParser.prototype,{
 					}
 					v_slides = __ret;
 					hasv_slides = true;
-				} else if("date".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "date") {
+				} else if("date".length == __name__.max - __name__.min && __name__.source.startsWith("date",__name__.min)) {
 					v_date = tink_json__$Parser_JsonString_$Impl_$.toString(this.parseString());
 					hasv_date = true;
-				} else if("author".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "author") {
+				} else if("author".length == __name__.max - __name__.min && __name__.source.startsWith("author",__name__.min)) {
 					v_author = tink_json__$Parser_JsonString_$Impl_$.toString(this.parseString());
 					hasv_author = true;
 				} else {
@@ -7388,13 +7967,13 @@ tink_json_Parser0.prototype = $extend(tink_json_BasicParser.prototype,{
 				if(!tmp2) {
 					this.die("Expected :");
 				}
-				if("type".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "type") {
+				if("type".length == __name__.max - __name__.min && __name__.source.startsWith("type",__name__.min)) {
 					v_type = tink_json__$Parser_JsonString_$Impl_$.toString(this.parseString());
 					hasv_type = true;
-				} else if("title".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "title") {
+				} else if("title".length == __name__.max - __name__.min && __name__.source.startsWith("title",__name__.min)) {
 					v_title = tink_json__$Parser_JsonString_$Impl_$.toString(this.parseString());
 					hasv_title = true;
-				} else if("items".length == __name__.max - __name__.min && __name__.source.substring(__name__.min,__name__.max) == "items") {
+				} else if("items".length == __name__.max - __name__.min && __name__.source.startsWith("items",__name__.min)) {
 					while(this.pos < this.max && this.source.charCodeAt(this.pos) < 33) this.pos++;
 					var v_items1;
 					if(this.max > this.pos + 3 && this.source.charCodeAt(this.pos) == 110 && this.source.charCodeAt(this.pos + 1) == 117 && this.source.charCodeAt(this.pos + 2) == 108 && this.source.charCodeAt(this.pos + 3) == 108) {
@@ -7526,8 +8105,263 @@ var tink_json_Value = $hxEnums["tink.json.Value"] = { __ename__ : true, __constr
 	,VArray: ($_=function(a) { return {_hx_index:4,a:a,__enum__:"tink.json.Value",toString:$estr}; },$_.__params__ = ["a"],$_)
 	,VObject: ($_=function(a) { return {_hx_index:5,a:a,__enum__:"tink.json.Value",toString:$estr}; },$_.__params__ = ["a"],$_)
 };
+var tink_json_Writer = function() { };
+tink_json_Writer.__name__ = true;
+var tink_json_BasicWriter = function() {
+	this.plugins = new tink_core_Annex(this);
+};
+tink_json_BasicWriter.__name__ = true;
+tink_json_BasicWriter.prototype = {
+	init: function() {
+		var this1 = "";
+		this.buf = this1;
+	}
+	,output: function(s) {
+		this.buf += s;
+	}
+	,char: function(c) {
+		this.buf += String.fromCodePoint(c);
+	}
+	,writeInt: function(v) {
+		this.buf += v == null ? "null" : "" + v;
+	}
+	,writeFloat: function(v) {
+		this.buf += v == null ? "null" : "" + v;
+	}
+	,writeBool: function(b) {
+		this.buf += b ? "true" : "false";
+	}
+	,writeString: function(s) {
+		var s1 = JSON.stringify(s);
+		this.buf += s1;
+	}
+	,writeDynamic: function(value) {
+		var s = JSON.stringify(value);
+		this.buf += s;
+	}
+	,writeValue: function(value) {
+		var _gthis = this;
+		switch(value._hx_index) {
+		case 0:
+			var f = value.f;
+			this.buf += f == null ? "null" : "" + f;
+			break;
+		case 1:
+			var s = value.s;
+			var s1 = JSON.stringify(s);
+			this.buf += s1;
+			break;
+		case 2:
+			this.buf += "null";
+			break;
+		case 3:
+			var b = value.b;
+			this.buf += b ? "true" : "false";
+			break;
+		case 4:
+			var _g4 = value.a;
+			if(_g4.length == 0) {
+				this.buf += "[]";
+			} else {
+				var a = _g4;
+				this.buf += String.fromCodePoint(91);
+				this.writeValue(a[0]);
+				var _g = 1;
+				var _g1 = a.length;
+				while(_g < _g1) {
+					var i = _g++;
+					this.buf += String.fromCodePoint(44);
+					this.writeValue(a[i]);
+				}
+				this.buf += String.fromCodePoint(93);
+			}
+			break;
+		case 5:
+			var _g11 = value.a;
+			if(_g11.length == 0) {
+				this.buf += "{}";
+			} else {
+				var a1 = _g11;
+				this.buf += String.fromCodePoint(123);
+				var p = a1[0];
+				var s2 = JSON.stringify(p.name);
+				_gthis.buf += s2;
+				_gthis.buf += String.fromCodePoint(58);
+				_gthis.writeValue(p.value);
+				var _g2 = 1;
+				var _g12 = a1.length;
+				while(_g2 < _g12) {
+					var i1 = _g2++;
+					this.buf += String.fromCodePoint(44);
+					var p1 = a1[i1];
+					var s3 = JSON.stringify(p1.name);
+					_gthis.buf += s3;
+					_gthis.buf += String.fromCodePoint(58);
+					_gthis.writeValue(p1.value);
+				}
+				this.buf += String.fromCodePoint(125);
+			}
+			break;
+		}
+	}
+	,__class__: tink_json_BasicWriter
+};
+var tink_json__$Writer_StringBuf_$Impl_$ = {};
+tink_json__$Writer_StringBuf_$Impl_$.__name__ = true;
+tink_json__$Writer_StringBuf_$Impl_$._new = function() {
+	var this1 = "";
+	return this1;
+};
+tink_json__$Writer_StringBuf_$Impl_$.addChar = function(this1,c) {
+	this1 += String.fromCodePoint(c);
+};
+tink_json__$Writer_StringBuf_$Impl_$.add = function(this1,s) {
+	this1 += s;
+};
+var tink_json_Writer0 = function() {
+	tink_json_BasicWriter.call(this);
+};
+tink_json_Writer0.__name__ = true;
+tink_json_Writer0.__super__ = tink_json_BasicWriter;
+tink_json_Writer0.prototype = $extend(tink_json_BasicWriter.prototype,{
+	parse0: function(value) {
+		var __first = true;
+		this.buf += String.fromCodePoint(123);
+		var value1 = value.slideshow;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"slideshow\":";
+		this.parse1(value1);
+		this.buf += String.fromCodePoint(125);
+	}
+	,parse1: function(value) {
+		var __first = true;
+		this.buf += String.fromCodePoint(123);
+		var value1 = value.author;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"author\":";
+		var s = JSON.stringify(value1);
+		this.buf += s;
+		var value2 = value.date;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"date\":";
+		var s1 = JSON.stringify(value2);
+		this.buf += s1;
+		var value3 = value.slides;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"slides\":";
+		this.buf += String.fromCodePoint(91);
+		var first = true;
+		var _g = 0;
+		while(_g < value3.length) {
+			var value4 = value3[_g];
+			++_g;
+			if(first) {
+				first = false;
+			} else {
+				this.buf += String.fromCodePoint(44);
+			}
+			this.parse2(value4);
+		}
+		this.buf += String.fromCodePoint(93);
+		var value5 = value.title;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"title\":";
+		var s2 = JSON.stringify(value5);
+		this.buf += s2;
+		this.buf += String.fromCodePoint(125);
+	}
+	,parse2: function(value) {
+		var __first = true;
+		this.buf += String.fromCodePoint(123);
+		var value1 = value.title;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"title\":";
+		var s = JSON.stringify(value1);
+		this.buf += s;
+		var value2 = value.type;
+		if(__first) {
+			__first = false;
+		} else {
+			this.buf += String.fromCodePoint(44);
+		}
+		this.buf += "\"type\":";
+		var s1 = JSON.stringify(value2);
+		this.buf += s1;
+		var _g = value.items;
+		if(_g != null) {
+			var value3 = _g;
+			if(__first) {
+				__first = false;
+			} else {
+				this.buf += String.fromCodePoint(44);
+			}
+			this.buf += "\"items\":";
+			if(value3 == null) {
+				this.buf += "null";
+			} else {
+				this.buf += String.fromCodePoint(91);
+				var first = true;
+				var _g1 = 0;
+				while(_g1 < value3.length) {
+					var value4 = value3[_g1];
+					++_g1;
+					if(first) {
+						first = false;
+					} else {
+						this.buf += String.fromCodePoint(44);
+					}
+					var s2 = JSON.stringify(value4);
+					this.buf += s2;
+				}
+				this.buf += String.fromCodePoint(93);
+			}
+		}
+		this.buf += String.fromCodePoint(125);
+	}
+	,write: function(value) {
+		this.init();
+		this.parse0(value);
+		return this.buf.toString();
+	}
+	,__class__: tink_json_Writer0
+});
 var tink_macro_DirectType = function() { };
 tink_macro_DirectType.__name__ = true;
+var tink_querystring__$Pairs_Pairs_$Impl_$ = {};
+tink_querystring__$Pairs_Pairs_$Impl_$.__name__ = true;
+tink_querystring__$Pairs_Pairs_$Impl_$.portions = function(s) {
+	return new tink_url__$Query_QueryStringParser(s,"&","=",0);
+};
+tink_querystring__$Pairs_Pairs_$Impl_$.portionsOfUrl = function(u) {
+	return tink_querystring__$Pairs_Pairs_$Impl_$.portions(u.query);
+};
+tink_querystring__$Pairs_Pairs_$Impl_$.ofIterable = function(i) {
+	return $getIterator(i);
+};
 var tink_streams__$IdealStream_IdealStream_$Impl_$ = {};
 tink_streams__$IdealStream_IdealStream_$Impl_$.__name__ = true;
 tink_streams__$IdealStream_IdealStream_$Impl_$.promiseOfIdealStream = function(p) {
@@ -8661,6 +9495,72 @@ tink_web__$Response_Response_$Impl_$._new = function(header,body) {
 tink_web__$Response_Response_$Impl_$.getData = function(this1) {
 	return this1.body;
 };
+var tink_web_forms__$FormField_FormField_$Impl_$ = {};
+tink_web_forms__$FormField_FormField_$Impl_$.__name__ = true;
+tink_web_forms__$FormField_FormField_$Impl_$.getValue = function(this1) {
+	switch(this1._hx_index) {
+	case 0:
+		var v = this1.v;
+		return v;
+	case 1:
+		var _g1 = this1.handle;
+		throw new js__$Boot_HaxeError("expected plain value but received file");
+	}
+};
+tink_web_forms__$FormField_FormField_$Impl_$.toFloat = function(this1) {
+	return tink__$Stringly_Stringly_$Impl_$.toFloat(tink_web_forms__$FormField_FormField_$Impl_$.getValue(this1));
+};
+tink_web_forms__$FormField_FormField_$Impl_$.toInt = function(this1) {
+	return tink__$Stringly_Stringly_$Impl_$.toInt(tink_web_forms__$FormField_FormField_$Impl_$.getValue(this1));
+};
+tink_web_forms__$FormField_FormField_$Impl_$.toString = function(this1) {
+	return tink_web_forms__$FormField_FormField_$Impl_$.getValue(this1);
+};
+tink_web_forms__$FormField_FormField_$Impl_$.getFile = function(this1) {
+	switch(this1._hx_index) {
+	case 0:
+		var _g = this1.v;
+		throw new js__$Boot_HaxeError("expected file but got plain value");
+	case 1:
+		var u = this1.handle;
+		var this2 = u;
+		return this2;
+	}
+};
+var tink_web_forms__$FormFile_FormFile_$Impl_$ = {};
+tink_web_forms__$FormFile_FormFile_$Impl_$.__name__ = true;
+tink_web_forms__$FormFile_FormFile_$Impl_$._new = function(v) {
+	var this1 = v;
+	return this1;
+};
+tink_web_forms__$FormFile_FormFile_$Impl_$.toJson = function(this1) {
+	var this2 = this1.fileName;
+	var this3 = this1.mimeType;
+	var src = this1.read();
+	var chunk = null;
+	var write = tink_io_RealSourceTools.all(src).handle(function(c) {
+		chunk = tink_core_OutcomeTools.sure(c);
+	});
+	var v;
+	if(chunk != null) {
+		v = chunk.toBytes();
+	} else {
+		if(write != null) {
+			write.cancel();
+		}
+		throw new js__$Boot_HaxeError(new tink_core_TypedError(501,"Can only upload files through JSON backed by with sync sources but got a " + Std.string(src),{ fileName : "tink/web/forms/FormFile.hx", lineNumber : 34, className : "tink.web.forms._FormFile.FormFile_Impl_", methodName : "toJson"}));
+	}
+	var this4 = { fileName : this2, mimeType : this3, content : v};
+	return this4;
+};
+tink_web_forms__$FormFile_FormFile_$Impl_$.ofJson = function(rep) {
+	var data = tink_json__$Representation_Representation_$Impl_$.get(rep);
+	var this1 = tink_http__$StructuredBody_UploadedFile_$Impl_$.ofBlob(data.fileName,data.mimeType,data.content);
+	return this1;
+};
+tink_web_forms__$FormFile_FormFile_$Impl_$.ofBlob = function(name,type,data) {
+	return tink_http__$StructuredBody_UploadedFile_$Impl_$.ofBlob(name,type,data);
+};
 var tink_web_proxy_Remote = function() { };
 tink_web_proxy_Remote.__name__ = true;
 var tink_web_proxy__$Remote_RemoteEndpoint_$Impl_$ = {};
@@ -8788,13 +9688,231 @@ var tink_web_proxy_Remote0 = function(client,endpoint) {
 tink_web_proxy_Remote0.__name__ = true;
 tink_web_proxy_Remote0.__super__ = tink_web_proxy_RemoteBase;
 tink_web_proxy_Remote0.prototype = $extend(tink_web_proxy_RemoteBase.prototype,{
-	json: function() {
+	hello: function() {
 		var __body__ = tink_chunk_ByteChunk.of(haxe_io_Bytes.ofString(""));
 		var this1 = "hello";
 		return tink_web_proxy__$Remote_RemoteEndpoint_$Impl_$.request(tink_web_proxy__$Remote_RemoteEndpoint_$Impl_$.sub(this.endpoint,{ path : [this1], query : [], headers : null}),this.client,"GET",new tink_streams_Single(new tink_core__$Lazy_LazyConst(__body__)),tink_web_proxy__$Remote_ResponseReader_$Impl_$.ofStringReader(($_=new tink_json_Parser0(),$bind($_,$_.tryParse))));
 	}
 	,__class__: tink_web_proxy_Remote0
 });
+var tink_web_routing__$Context_Path_$Impl_$ = {};
+tink_web_routing__$Context_Path_$Impl_$.__name__ = true;
+tink_web_routing__$Context_Path_$Impl_$.toString = function(this1) {
+	var _g = [];
+	var _g1 = 0;
+	while(_g1 < this1.length) {
+		var p = this1[_g1];
+		++_g1;
+		_g.push(tink_url__$Portion_Portion_$Impl_$.stringly(p));
+	}
+	return "/" + _g.join("/");
+};
+var tink_web_routing_Context = function(parent,accepts,request,depth,parts,params) {
+	this.parent = parent;
+	this.accepts = accepts;
+	this.request = request;
+	this.depth = depth;
+	this.parts = parts;
+	this.params = params;
+};
+tink_web_routing_Context.__name__ = true;
+tink_web_routing_Context.toCamelCase = function(header) {
+	var header1 = header;
+	var ret_b = "";
+	var pos = 0;
+	var max = header1.length;
+	while(pos < max) {
+		var _g = header1.charCodeAt(pos++);
+		if(_g == 45) {
+			if(pos < max) {
+				ret_b += Std.string(header1.charAt(pos++).toLowerCase());
+			}
+		} else {
+			var v = _g;
+			ret_b += String.fromCodePoint(v);
+		}
+	}
+	return ret_b;
+};
+tink_web_routing_Context.ofRequest = function(request) {
+	return new tink_web_routing_Context(null,tink_web_routing_Context.parseAcceptHeader(request.header),request,0,tink_url__$Path_Path_$Impl_$.parts(request.header.url.path),tink_url__$Query_Query_$Impl_$.toMap(request.header.url.query));
+};
+tink_web_routing_Context.authed = function(request,getSession) {
+	var tmp = tink_web_routing_Context.parseAcceptHeader(request.header);
+	var tmp1 = tink_url__$Path_Path_$Impl_$.parts(request.header.url.path);
+	var tmp2 = tink_url__$Query_Query_$Impl_$.toMap(request.header.url.query);
+	var f = getSession;
+	var a1 = request.header;
+	return new tink_web_routing_AuthedContext(null,tmp,request,0,tmp1,tmp2,new tink_core__$Lazy_LazyFunc(function() {
+		return f(a1);
+	}));
+};
+tink_web_routing_Context.parseAcceptHeader = function(h) {
+	var _g = h.get("accept");
+	if(_g.length == 0) {
+		return tink_web_routing_Context.acceptsAll;
+	} else {
+		var values = _g;
+		var _g1 = new haxe_ds_StringMap();
+		var _g11 = 0;
+		while(_g11 < values.length) {
+			var v = values[_g11];
+			++_g11;
+			var _g12 = 0;
+			var _g2 = tink_http__$Header_HeaderValue_$Impl_$.parse(v);
+			while(_g12 < _g2.length) {
+				var part = _g2[_g12];
+				++_g12;
+				var key = part.value;
+				if(__map_reserved[key] != null) {
+					_g1.setReserved(key,true);
+				} else {
+					_g1.h[key] = true;
+				}
+			}
+		}
+		var accepted = _g1;
+		if(__map_reserved["*/*"] != null ? accepted.getReserved("*/*") : accepted.h["*/*"]) {
+			return tink_web_routing_Context.acceptsAll;
+		} else {
+			return function(t) {
+				if(__map_reserved[t] != null) {
+					return accepted.existsReserved(t);
+				} else {
+					return accepted.h.hasOwnProperty(t);
+				}
+			};
+		}
+	}
+};
+tink_web_routing_Context.acceptsAll = function(s) {
+	return true;
+};
+tink_web_routing_Context.prototype = {
+	get_header: function() {
+		return this.request.header;
+	}
+	,allRaw: function() {
+		var _g = this.request.body;
+		var tmp;
+		if(_g._hx_index == 0) {
+			var s = _g.source;
+			tmp = s;
+		} else {
+			tmp = tink_io__$Source_Source_$Impl_$.ofError(new tink_core_TypedError(501,"not implemented",{ fileName : "tink/web/routing/Context.hx", lineNumber : 47, className : "tink.web.routing.Context", methodName : "get_rawBody"}));
+		}
+		return tink_io_RealSourceTools.all(tmp);
+	}
+	,get_rawBody: function() {
+		var _g = this.request.body;
+		if(_g._hx_index == 0) {
+			var s = _g.source;
+			return s;
+		} else {
+			return tink_io__$Source_Source_$Impl_$.ofError(new tink_core_TypedError(501,"not implemented",{ fileName : "tink/web/routing/Context.hx", lineNumber : 47, className : "tink.web.routing.Context", methodName : "get_rawBody"}));
+		}
+	}
+	,headers: function() {
+		var _g = [];
+		var f = HxOverrides.iter(this.request.header.fields);
+		while(f.hasNext()) {
+			var f1 = f.next();
+			_g.push(new tink_core_NamedWith(tink_web_routing_Context.toCamelCase(f1.name),f1.value));
+		}
+		return tink_querystring__$Pairs_Pairs_$Impl_$.ofIterable(_g);
+	}
+	,parse: function() {
+		var _g = this.request.body;
+		switch(_g._hx_index) {
+		case 0:
+			var src = _g.source;
+			var parseForm = function() {
+				return tink_core__$Promise_Promise_$Impl_$.next(tink_io_RealSourceTools.all(src),tink_core__$Promise_Next_$Impl_$.ofSafeSync(function(chunk) {
+					var _g1 = [];
+					var part = new tink_url__$Query_QueryStringParser(chunk.toString(),"&","=",0);
+					while(part.hasNext()) {
+						var part1 = part.next();
+						_g1.push(new tink_core_NamedWith(part1.name,tink_http_BodyPart.Value(tink_url__$Portion_Portion_$Impl_$.stringly(part1.value))));
+					}
+					return _g1;
+				}));
+			};
+			return parseForm();
+		case 1:
+			var parts = _g.parts;
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(parts)));
+		}
+	}
+	,get_pathLength: function() {
+		return this.parts.length - this.depth;
+	}
+	,getPrefix: function() {
+		return this.parts.slice(0,this.depth);
+	}
+	,getPath: function() {
+		return this.parts.slice(this.depth);
+	}
+	,hasParam: function(name) {
+		var _this = this.params;
+		if(__map_reserved[name] != null) {
+			return _this.existsReserved(name);
+		} else {
+			return _this.h.hasOwnProperty(name);
+		}
+	}
+	,part: function(index) {
+		if(this.depth + index >= this.parts.length) {
+			return "";
+		} else {
+			return tink_url__$Portion_Portion_$Impl_$.stringly(this.parts[this.depth + index]);
+		}
+	}
+	,param: function(name) {
+		var _this = this.params;
+		return tink_url__$Portion_Portion_$Impl_$.stringly(__map_reserved[name] != null ? _this.getReserved(name) : _this.h[name]);
+	}
+	,sub: function(descend) {
+		return new tink_web_routing_Context(this,this.accepts,this.request,this.depth + descend,this.parts,this.params);
+	}
+	,__class__: tink_web_routing_Context
+};
+var tink_web_routing_AuthedContext = function(parent,accepts,request,depth,parts,params,session,user) {
+	this.session = session;
+	var tmp;
+	if(user == null) {
+		tmp = session.map(function(s) {
+			return s.getUser();
+		});
+	} else {
+		var v = user;
+		tmp = v;
+	}
+	this.user = tmp;
+	tink_web_routing_Context.call(this,parent,accepts,request,depth,parts,params);
+};
+tink_web_routing_AuthedContext.__name__ = true;
+tink_web_routing_AuthedContext.__super__ = tink_web_routing_Context;
+tink_web_routing_AuthedContext.prototype = $extend(tink_web_routing_Context.prototype,{
+	sub: function(descend) {
+		return new tink_web_routing_AuthedContext(this,this.accepts,this.request,this.depth + descend,this.parts,this.params,this.session,this.user);
+	}
+	,__class__: tink_web_routing_AuthedContext
+});
+var tink_web_routing__$Context_RequestReader_$Impl_$ = {};
+tink_web_routing__$Context_RequestReader_$Impl_$.__name__ = true;
+tink_web_routing__$Context_RequestReader_$Impl_$.ofStringReader = function(read) {
+	return function(ctx) {
+		return tink_core__$Promise_Promise_$Impl_$.next(ctx.allRaw(),function(body) {
+			var o = body.toString();
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(read(o)));
+		});
+	};
+};
+tink_web_routing__$Context_RequestReader_$Impl_$.ofSafeStringReader = function(read) {
+	return tink_web_routing__$Context_RequestReader_$Impl_$.ofStringReader(function(s) {
+		return tink_core_Outcome.Success(read(s));
+	});
+};
 var tink_web_routing__$Response_Response_$Impl_$ = {};
 tink_web_routing__$Response_Response_$Impl_$.__name__ = true;
 tink_web_routing__$Response_Response_$Impl_$.ofString = function(s) {
@@ -8823,6 +9941,48 @@ tink_web_routing__$Response_Response_$Impl_$.empty = function(code) {
 };
 tink_web_routing__$Response_Response_$Impl_$.textual = function(code,contentType,string,headers) {
 	return tink_web_routing__$Response_Response_$Impl_$.binary(code,contentType,haxe_io_Bytes.ofString(string),headers);
+};
+var tink_web_routing_Router = function() { };
+tink_web_routing_Router.__name__ = true;
+var tink_web_routing_Router0 = function(target) {
+	this.target = target;
+};
+tink_web_routing_Router0.__name__ = true;
+tink_web_routing_Router0.prototype = {
+	route: function(ctx) {
+		var l = ctx.parts.length - ctx.depth;
+		var _g2 = ctx.part(0);
+		if(ctx.request.header.method == "GET") {
+			if(_g2 == "hello") {
+				if(l > 0 == true) {
+					if(l > 1 == false) {
+						return tink_core__$Promise_Promise_$Impl_$.ofSpecific(this.hello(ctx));
+					} else {
+						var this1 = ctx.request.header.url;
+						return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Failure(new tink_core_TypedError(404,"Not Found: [" + ctx.request.header.method + "] " + (this1.query == null ? this1.path : this1.path + "?" + this1.query),{ fileName : "Server.hx", lineNumber : 35, className : "tink.web.routing.Router0", methodName : "route"}))));
+					}
+				} else {
+					var this2 = ctx.request.header.url;
+					return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Failure(new tink_core_TypedError(404,"Not Found: [" + ctx.request.header.method + "] " + (this2.query == null ? this2.path : this2.path + "?" + this2.query),{ fileName : "Server.hx", lineNumber : 35, className : "tink.web.routing.Router0", methodName : "route"}))));
+				}
+			} else {
+				var this3 = ctx.request.header.url;
+				return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Failure(new tink_core_TypedError(404,"Not Found: [" + ctx.request.header.method + "] " + (this3.query == null ? this3.path : this3.path + "?" + this3.query),{ fileName : "Server.hx", lineNumber : 35, className : "tink.web.routing.Router0", methodName : "route"}))));
+			}
+		} else {
+			var this4 = ctx.request.header.url;
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Failure(new tink_core_TypedError(404,"Not Found: [" + ctx.request.header.method + "] " + (this4.query == null ? this4.path : this4.path + "?" + this4.query),{ fileName : "Server.hx", lineNumber : 35, className : "tink.web.routing.Router0", methodName : "route"}))));
+		}
+	}
+	,hello: function(ctx) {
+		return tink_core__$Promise_Promise_$Impl_$.next(new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(this.target.hello()))),function(__data__) {
+			if(ctx.accepts("application/json")) {
+				return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Success(tink_web_routing__$Response_Response_$Impl_$.textual(200,"application/json",new tink_json_Writer0().write(__data__),[]))));
+			}
+			return new tink_core__$Future_SyncFuture(new tink_core__$Lazy_LazyConst(tink_core_Outcome.Failure(new tink_core_TypedError(415,"Unsupported Media Type",{ fileName : "Server.hx", lineNumber : 14, className : "tink.web.routing.Router0", methodName : "hello"}))));
+		});
+	}
+	,__class__: tink_web_routing_Router0
 };
 function $getIterator(o) { if( o instanceof Array ) return HxOverrides.iter(o); else if (typeof o == 'string') return HxOverrides.strIter(o); else return o.iterator(); }
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
@@ -8925,6 +10085,9 @@ tink__$Url_Url_$Impl_$.HOSTNAMES = 7;
 tink__$Url_Url_$Impl_$.PATH = 8;
 tink__$Url_Url_$Impl_$.QUERY = 10;
 tink__$Url_Url_$Impl_$.HASH = 12;
+tink_chunk_nodejs_BufferChunk.alloc = "allocUnsafe" in Buffer ? js_node_buffer_Buffer.allocUnsafe : function(size) {
+	return new js_node_buffer_Buffer(size);
+};
 tink_core__$Callback_Callback_$Impl_$.depth = 0;
 tink_core__$Callback_Callback_$Impl_$.MAX_DEPTH = 500;
 tink_core__$Future_NeverFuture.inst = new tink_core__$Future_NeverFuture();

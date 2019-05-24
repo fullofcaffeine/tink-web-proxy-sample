@@ -9,10 +9,8 @@ import ApiResult.Result;
 class Client {
     public static function main() {
         var remote = new Remote<Root>(new JsClient(), new RemoteEndpoint(new Host('localhost', 3000)));
-        var ret = remote.json().handle((o) -> {
+        var ret = remote.hello().handle((o) -> {
           trace(o);
         });
     }
 }
-
-

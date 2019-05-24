@@ -1,16 +1,15 @@
 -cp .
 
 -lib tink_web
+-lib hxnodejs
 -D no-deprecation-warnings
 --each
 
 --next
--lib hxnodejs
 -main Client
 -js client.js
 
 --next
--lib hxnodejs
 -main Server
 -js server.js
 
