@@ -11,8 +11,11 @@ var Client = $hx_exports["Client"] = function() { };
 Client.__name__ = true;
 Client.main = function() {
 	var remote = new tink_web_proxy_Remote0(new tink_http_clients_JsClient(),tink_web_proxy__$Remote_RemoteEndpoint_$Impl_$._new(tink_url__$Host_Host_$Impl_$._new("localhost",3000)));
-	var ret = remote.hello().handle(function(o) {
-		console.log("Client.hx:13:",o);
+	var bar_a = 1;
+	var bar_b = "Foo";
+	console.log("Client.hx:21:",bar_a);
+	remote.hello().handle(function(o) {
+		console.log("Client.hx:27:",o);
 		return;
 	});
 };

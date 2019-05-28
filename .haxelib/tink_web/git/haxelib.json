@@ -1,0 +1,24 @@
+{
+	"name": "tink_web",
+	"license": "MIT",
+	"tags": [
+		"tink",
+		"http",
+		"routing",
+		"dispatch",
+		"api",
+		"rest"
+	],
+	"classPath": "src",
+	"contributors": [
+		"back2dos"
+	],
+	"releasenote": "Various fixes",
+	"version": "0.1.5",
+	"url": "https://github.com/haxetink/tink_web/",
+	"dependencies": {
+		"tink_http": "",
+		"tink_json": "",
+		"tink_querystring": ""
+	}
+}

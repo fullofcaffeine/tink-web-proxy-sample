@@ -1,0 +1,6 @@
+-js dummy
+--macro ImportAll.run("src")
+--no-output
+
+--next
+--run BuildExamples

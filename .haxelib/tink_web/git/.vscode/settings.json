@@ -1,0 +1,13 @@
+{
+    "haxe.displayConfigurations": [
+        ["dev.hxml"]
+    ],
+    "haxe.displayServer": {
+       "haxePath": "./node_modules/.bin/haxe",
+        "windows": {
+            "haxePath": "node_modules\\.bin\\haxe.cmd"
+        }
+    },
+    "editor.useTabStops": false,
+    "editor.tabSize": 2
+}

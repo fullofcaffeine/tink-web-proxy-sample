@@ -1,0 +1,19 @@
+{
+  "name": "tink_json",
+  "license": "MIT",
+  "tags": [
+    "tink",
+    "cross",
+    "json"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "back2dos"
+  ],
+  "releasenote": "Support default values.",
+  "version": "0.9.0",
+  "url": "http://haxetink.org/tink_json",
+  "dependencies": {
+    "tink_typecrawler": ""
+  }
+}

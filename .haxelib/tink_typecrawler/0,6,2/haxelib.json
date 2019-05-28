@@ -1,0 +1,18 @@
+{
+	"name": "tink_typecrawler",
+	"classPath": "src",
+	"dependencies": {
+		"tink_macro": ""
+	},
+	"url": "http://haxetink.org/tink_typecrawler",
+	"contributors": [
+		"back2dos"
+	],
+	"version": "0.6.2",
+	"releasenote": "Reduce `Null<T>` only to `T` instead of fully.",
+	"tags": [
+		"tink",
+		"macro"
+	],
+	"license": "MIT"
+}

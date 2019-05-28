@@ -1,0 +1,21 @@
+{
+  "name": "tink_stringly",
+  "license": "MIT",
+  "tags": [
+    "tink",
+    "cross",
+    "stringlytyped",
+    "quirks",
+    "util"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "back2dos"
+  ],
+  "releasenote": "Added Stringly#parse",
+  "version": "0.3.1",
+  "url": "https://github.com/haxetink/tink_stringly/",
+  "dependencies": {
+    "tink_core": ""
+  }
+}

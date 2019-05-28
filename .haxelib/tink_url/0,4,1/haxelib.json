@@ -1,0 +1,24 @@
+{
+  "name": "tink_url",
+  "license": "MIT",
+  "tags": [
+    "tink",
+    "cross",
+    "utility",
+    "url",
+    "path",
+    "parsing",
+    "normalization"
+  ],
+  "classPath": "src",
+  "description": "URL and path handling made bearable",
+  "contributors": [
+    "back2dos"
+  ],
+  "releasenote": "Revised Auth.",
+  "version": "0.4.1",
+  "url": "http://haxetink.org/tink_url",
+  "dependencies": {
+    "tink_stringly": ""
+  }
+}

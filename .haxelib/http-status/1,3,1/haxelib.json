@@ -1,0 +1,17 @@
+{
+	"name": "http-status",
+	"license": "MIT",
+	"tags": [
+		"http",
+		"status"
+	],
+	"classPath": "src",
+	"description": "List of HTTP status codes and reasons",
+	"contributors": [
+		"kevinresol"
+	],
+	"releasenote": "toInt is necessary",
+	"version": "1.3.1",
+	"url": "https://github.com/kevinresol/http-status",
+	"dependencies": {}
+}
